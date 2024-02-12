@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, useRef, useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { uploadFirebaseStorage } from "@/utils/firebase";
 import { fileContainer, fileLabel } from "./ProfileUploadForm.css";
 import { fetchRouteHandler } from "@/utils/fetch";
@@ -16,6 +16,18 @@ const ProfileUploadForm = () => {
   const handleUploadButtonClick = () => {
     fileRef.current?.click();
   };
+
+  useEffect(() => {
+    const init = async () => {
+      const result = await fetchRouteHandler({
+        path: "/image",
+        method: "GET",
+      });
+      console.log(await result.json());
+      return result;
+    };
+    init();
+  }, []);
 
   /**
    * 업로드 파일 유효성 검증 및 업로드
@@ -46,11 +58,6 @@ const ProfileUploadForm = () => {
         userId: "유저아이디123",
         imageUrl: imageUrl,
       }),
-    });
-
-    const result = await fetchRouteHandler({
-      path: "/image",
-      method: "GET",
     });
     console.log(res);
   };

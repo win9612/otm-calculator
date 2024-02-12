@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { fbStore } from "../../../../firebase.config";
 
@@ -9,13 +9,24 @@ export async function GET(request: NextRequest) {
   const param = request.nextUrl.searchParams;
   const userId = param.get("userId");
 
-  const res = await getDoc(doc(fbStore, "profile/image/유저아이디123/JmqlEkLW8YngCpWIXqxU"));
+  const ref = collection(fbStore, "profile_image");
 
-  if (res.exists()) {
-    console.log(res.data());
-  }
+  const imageQuery = query(ref, orderBy("userId"));
+  const r = await getDocs(imageQuery);
+  const docs = r.docs;
 
-  return NextResponse.json({});
+  const items = [...docs].map((doc) => doc.data());
+  console.log(items);
+
+  // const res = await getDoc(doc(fbStore, "profile/image/유저아이디123/JmqlEkLW8YngCpWIXqxU"));
+
+  // if (res.exists()) {
+  //   console.log(res.data());
+  // }
+
+  return NextResponse.json({
+    result: r,
+  });
 }
 
 /**
@@ -24,7 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   const body = JSON.parse(await request.json());
 
-  const response = await addDoc(collection(fbStore, `profile/image/${body.userId}`), {
+  const response = await addDoc(collection(fbStore, `profile_image`), {
     userId: body.userId,
     imageUrl: body.imageUrl,
   });
