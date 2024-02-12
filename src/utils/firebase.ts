@@ -1,32 +1,19 @@
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
-
-const storage = getStorage();
-
-/** dataURL을 File 객체로 변환해주는 함수 */
-const dataURLtoFile = (dataurl: string, filename: string) => {
-  const arr = dataurl.split(",");
-  const mime = arr[0].match(/:(.*?);/)![1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
-};
+import { fbStorage } from "../../firebase.config";
 
 /** firebase storage에 canvas 이미지 업로드
- * @param imageDataUrl url 형식의 이미지
- * @param path firebase storage에 저장할 이미지 경로
+ * @param {File} imageFile url 형식의 이미지
+ * @param path firebase storage에 저장할 이미지 경로 (default: "/images/default")
  * @return firebase storage에 저장된 경로 풀네임
  */
-export const uploadFirebaseStorage = async (imageDataUrl: string, path: string) => {
-  const filePath = path ? path : "images/";
-  const filename = new Date().valueOf();
+export const uploadFirebaseStorage = async (imageFile: File, path?: string) => {
+  const filePath = path ? `images/${path}` : "images/default/";
+  const fileName = imageFile.name;
+  const fullPath = `${filePath}${fileName}`;
 
-  const storageRef = ref(storage, `${filePath}${filename}.png`);
-  const imageFile = dataURLtoFile(imageDataUrl, "canvas_image.png");
+  // const filename = new Date().valueOf();
+  // const storageRef = ref(storage, `${filePath}${filename}.png`);
+  const storageRef = ref(fbStorage, fullPath);
 
   try {
     await uploadBytes(storageRef, imageFile);
@@ -35,13 +22,13 @@ export const uploadFirebaseStorage = async (imageDataUrl: string, path: string) 
     alert("파일 업로드 중 오류 발생");
   }
 
-  return `${filePath}${filename}`;
+  return fullPath;
 };
 
 /** firebase storage에 저장된 이미지 불러오기
  * @param {string} path 파일이름 이전까지의 firebase storage 경로 (예시 -> drawings/1216162.png)
  */
 export const downloadFirebaseStorage = async (path: string) => {
-  const result = await getDownloadURL(ref(storage, `${path}`));
+  const result = await getDownloadURL(ref(fbStorage, `${path}`));
   return result;
 };
